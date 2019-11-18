@@ -3,11 +3,11 @@ export type Breakpoint = 'xs' | MediaQueryBreakpoint;
 export type BreakpointMap = { [BP in Breakpoint]: number };
 
 export const bps = {
-  "s": 321,
-  "m": 768,
-  "l": 1024,
-  "xl": 1280
-}
+  s: 321,
+  m: 768,
+  l: 1024,
+  xl: 1280,
+};
 
 export const breakpoints: BreakpointMap = {
   xs: 0,

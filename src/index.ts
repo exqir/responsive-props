@@ -1,2 +1,2 @@
-export * from './responsiveProp'
-export * from './mediaQuery'
+export * from './responsiveProp';
+export * from './mediaQuery';

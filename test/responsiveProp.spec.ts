@@ -11,7 +11,7 @@ describe('responsiveProp', () => {
     const result = responsiveProp<string | undefined>(
       undefined,
       undefined,
-      prop => prop && `foo: ${prop};`,
+      prop => prop && `foo: ${prop};`
     );
 
     expect(result).toEqual('');
@@ -27,7 +27,7 @@ describe('responsiveProp', () => {
     const result = responsiveProp(
       { xs: 'bar' },
       'tar',
-      prop => `foo: ${prop};`,
+      prop => `foo: ${prop};`
     );
 
     expect(result).toEqual('foo: bar;');
@@ -43,11 +43,11 @@ describe('responsiveProp', () => {
     const result = responsiveProp(
       { xl: 'tar', s: 'bar' },
       'zar',
-      prop => `foo: ${prop};`,
+      prop => `foo: ${prop};`
     );
 
     expect(result).toEqual(
-      'foo: zar; @media (min-width: 321px) { foo: bar; } @media (min-width: 1280px) { foo: tar; }',
+      'foo: zar; @media (min-width: 321px) { foo: bar; } @media (min-width: 1280px) { foo: tar; }'
     );
   });
 
@@ -55,7 +55,7 @@ describe('responsiveProp', () => {
     const result = responsiveProp<string, string>(
       ['medium', 'column'],
       ['default', 'default'],
-      (prop, direction) => prop && `${direction}: ${prop};`,
+      (prop, direction) => prop && `${direction}: ${prop};`
     );
 
     expect(result).toEqual('column: medium;');
@@ -63,13 +63,16 @@ describe('responsiveProp', () => {
 
   it('should create styles for every permutation if main prop has more breakpoints', () => {
     const result = responsiveProp<string, string>(
-      [{ xs: 'medium', l: 'large', xl: 'small' }, { xs: 'column', xl: 'row' }],
+      [
+        { xs: 'medium', l: 'large', xl: 'small' },
+        { xs: 'column', xl: 'row' },
+      ],
       ['default', 'default'],
-      (prop, direction) => `${direction}: ${prop};`,
+      (prop, direction) => `${direction}: ${prop};`
     );
 
     expect(result).toEqual(
-      'column: medium; @media (min-width: 1024px) { column: large; } @media (min-width: 1280px) { row: small; }',
+      'column: medium; @media (min-width: 1024px) { column: large; } @media (min-width: 1280px) { row: small; }'
     );
   });
 
@@ -77,11 +80,11 @@ describe('responsiveProp', () => {
     const result = responsiveProp<string, string>(
       [{ l: 'medium' }, { xs: 'column', xl: 'row' }],
       ['small', 'default'],
-      (prop, direction) => `${direction}: ${prop};`,
+      (prop, direction) => `${direction}: ${prop};`
     );
 
     expect(result).toEqual(
-      'column: small; @media (min-width: 1024px) { column: medium; } @media (min-width: 1280px) { row: medium; }',
+      'column: small; @media (min-width: 1024px) { column: medium; } @media (min-width: 1280px) { row: medium; }'
     );
   });
 
@@ -95,11 +98,11 @@ describe('responsiveProp', () => {
       ],
       ['small', 'default', false, 'rem'],
       (prop, direction, other, unit) =>
-        `${direction}${other ? '' : '-reverse'}: ${prop} ${unit};`,
+        `${direction}${other ? '' : '-reverse'}: ${prop} ${unit};`
     );
 
     expect(result).toEqual(
-      'column: small rem; @media (min-width: 321px) { column: small px; } @media (min-width: 1024px) { column: medium px; } @media (min-width: 1280px) { row: medium em; }',
+      'column: small rem; @media (min-width: 321px) { column: small px; } @media (min-width: 1024px) { column: medium px; } @media (min-width: 1280px) { row: medium em; }'
     );
   });
 
@@ -107,11 +110,11 @@ describe('responsiveProp', () => {
     const result = responsiveProp<string, string | undefined>(
       [{ l: 'bar' }, undefined],
       ['default', undefined],
-      (prop, direction) => `foo${direction ? '-direction' : ''}: ${prop};`,
+      (prop, direction) => `foo${direction ? '-direction' : ''}: ${prop};`
     );
 
     expect(result).toEqual(
-      'foo: default; @media (min-width: 1024px) { foo: bar; }',
+      'foo: default; @media (min-width: 1024px) { foo: bar; }'
     );
   });
 
@@ -119,7 +122,7 @@ describe('responsiveProp', () => {
     const result = responsiveProp<string | undefined, string | undefined>(
       [undefined, undefined],
       ['default', undefined],
-      (prop, direction) => `foo${direction ? '-direction' : ''}: ${prop};`,
+      (prop, direction) => `foo${direction ? '-direction' : ''}: ${prop};`
     );
 
     expect(result).toEqual('foo: default;');
@@ -129,7 +132,7 @@ describe('responsiveProp', () => {
     const result = responsiveProp<string | undefined, string | undefined>(
       [undefined, undefined],
       [undefined, undefined],
-      (prop, direction) => (prop || direction ? 'yeah' : 'ney'),
+      (prop, direction) => (prop || direction ? 'yeah' : 'ney')
     );
 
     expect(result).toEqual('ney');
@@ -141,7 +144,7 @@ describe('responsiveProp', () => {
     >(
       { width: 1, height: 2 },
       undefined,
-      prop => prop && `width: ${prop.width}; height: ${prop.height};`,
+      prop => prop && `width: ${prop.width}; height: ${prop.height};`
     );
 
     expect(result).toEqual('width: 1; height: 2;');
@@ -153,11 +156,11 @@ describe('responsiveProp', () => {
     >(
       { m: { width: 4, height: 5 } },
       { width: 1, height: 2 },
-      prop => prop && `width: ${prop.width}; height: ${prop.height};`,
+      prop => prop && `width: ${prop.width}; height: ${prop.height};`
     );
 
     expect(result).toEqual(
-      'width: 1; height: 2; @media (min-width: 768px) { width: 4; height: 5; }',
+      'width: 1; height: 2; @media (min-width: 768px) { width: 4; height: 5; }'
     );
   });
 });
