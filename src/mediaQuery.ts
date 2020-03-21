@@ -5,10 +5,9 @@ import { BreakpointMap } from './types';
  * @param {Breakpoints} breakpoints
  * @returns {Function} (breakpoint: Key) => `@media (min-width ...)`
  */
-export function mq<
-  Breakpoints extends BreakpointMap,
-  Key extends keyof Breakpoints
->(breakpoints: Breakpoints) {
-  return (breakpoint: Key) =>
+export function mq<Breakpoints extends BreakpointMap>(
+  breakpoints: Breakpoints
+) {
+  return (breakpoint: keyof Breakpoints) =>
     `@media (min-width: ${breakpoints[breakpoint]}px)`;
 }

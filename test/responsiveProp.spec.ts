@@ -1,166 +1,269 @@
-import { responsiveProp } from '../src/responsiveProp';
+import { responsiveProp as createResponsiveProp } from '../src/responsiveProp';
+
+type Value = 'value' | 'default';
+type Option = 'some' | 'none';
+
+const breakpoints = {
+  default: 0,
+  small: 100,
+  medium: 500,
+  large: 600,
+};
+
+const responsiveProp = createResponsiveProp(breakpoints);
 
 describe('responsiveProp', () => {
-  it('should use defaultValue if prop is undefined', () => {
-    const result = responsiveProp(undefined, 'bar', prop => `foo: ${prop};`);
+  describe('provide props to callback', () => {
+    it('should call callback with default value if prop is undefined', () => {
+      const callback = jest.fn();
 
-    expect(result).toEqual('foo: bar;');
+      responsiveProp(undefined, 'default', callback);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledWith('default');
+    });
+
+    it('should call callback with value if prop is not an responsive object', () => {
+      const callback = jest.fn();
+
+      responsiveProp<Value>('value', 'default', callback);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledWith('value');
+    });
+
+    it('should call callback with value if only default is defined in responsive object', () => {
+      const callback = jest.fn();
+
+      responsiveProp<Value>({ default: 'value' }, 'default', callback);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledWith('value');
+    });
+
+    it('should call callback with default value and value for breakpoint if only none default breakpoints are defined in responsive object', () => {
+      const callback = jest.fn();
+
+      responsiveProp<Value>({ small: 'value' }, 'default', callback);
+
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveBeenCalledWith('default');
+      expect(callback).toHaveBeenCalledWith('value');
+    });
   });
 
-  it('should allow returning empty rule', () => {
-    const result = responsiveProp<string | undefined>(
-      undefined,
-      undefined,
-      prop => prop && `foo: ${prop};`
-    );
+  describe('mediaQueries', () => {
+    it('should allow returning empty rule from callback', () => {
+      const result = responsiveProp<undefined>(
+        undefined,
+        undefined,
+        () => undefined
+      );
 
-    expect(result).toEqual('');
+      expect(result).toEqual('');
+    });
+
+    it('should return callback results wrapped in mediaQueries if prop is an responsive object', () => {
+      const result = responsiveProp<string>(
+        { small: 'small', medium: 'medium', large: 'large' },
+        'default',
+        prop => prop
+      );
+
+      expect(result).toContain('default');
+      expect(result).toContain(
+        `@media (min-width: ${breakpoints.small}px) { small }`
+      );
+      expect(result).toContain(
+        `@media (min-width: ${breakpoints.medium}px) { medium }`
+      );
+      expect(result).toContain(
+        `@media (min-width: ${breakpoints.large}px) { large }`
+      );
+    });
+
+    it('should return callback results wrapped in mediaQueries if multiple props are responsive objects', () => {
+      const result = responsiveProp<string, string>(
+        [
+          {
+            small: 'first_small',
+            medium: 'first_medium',
+            large: 'first_large',
+          },
+          {
+            small: 'second_small',
+            medium: 'second_medium',
+            large: 'second_large',
+          },
+        ],
+        ['first_default', 'second_default'],
+        (firstProp, secondProp) => `${firstProp} | ${secondProp}`
+      );
+
+      expect(result).toContain('first_default | second_default');
+      expect(result).toContain(
+        `@media (min-width: ${breakpoints.small}px) { first_small | second_small }`
+      );
+      expect(result).toContain(
+        `@media (min-width: ${breakpoints.medium}px) { first_medium | second_medium }`
+      );
+      expect(result).toContain(
+        `@media (min-width: ${breakpoints.large}px) { first_large | second_large }`
+      );
+    });
   });
 
-  it('should return value if prop is not an object', () => {
-    const result = responsiveProp('bar', 'tar', prop => `foo: ${prop};`);
+  describe('provide multiple props to callback', () => {
+    it('should call callback with all values if props are not responsive objects', () => {
+      const callback = jest.fn();
 
-    expect(result).toEqual('foo: bar;');
-  });
+      responsiveProp<Value, Option>(
+        ['value', 'some'],
+        ['default', 'none'],
+        callback
+      );
 
-  it('should return value if only xs is defined in responsive object', () => {
-    const result = responsiveProp(
-      { xs: 'bar' },
-      'tar',
-      prop => `foo: ${prop};`
-    );
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledWith('value', 'some');
+    });
 
-    expect(result).toEqual('foo: bar;');
-  });
+    it('should call callback with multiple props with all values if props are responsive objects', () => {
+      const callback = jest.fn();
 
-  it('should use default value if only one breakpoint is defined in responsive object', () => {
-    const result = responsiveProp({ s: 'bar' }, 'tar', prop => `foo: ${prop};`);
+      responsiveProp<string, string, boolean, string>(
+        [
+          { small: 'first_small' },
+          { small: 'second_small', large: 'second_large' },
+          true,
+          { small: 'fourth_small', medium: 'fourth_medium' },
+        ],
+        ['first_default', 'second_default', false, 'fourth_default'],
+        callback
+      );
 
-    expect(result).toEqual('foo: tar; @media (min-width: 321px) { foo: bar; }');
-  });
-
-  it('should return mediaQueries if prop is an responsive object', () => {
-    const result = responsiveProp(
-      { xl: 'tar', s: 'bar' },
-      'zar',
-      prop => `foo: ${prop};`
-    );
-
-    expect(result).toEqual(
-      'foo: zar; @media (min-width: 321px) { foo: bar; } @media (min-width: 1280px) { foo: tar; }'
-    );
-  });
-
-  it('should return value if props are primitives', () => {
-    const result = responsiveProp<string, string>(
-      ['medium', 'column'],
-      ['default', 'default'],
-      (prop, direction) => prop && `${direction}: ${prop};`
-    );
-
-    expect(result).toEqual('column: medium;');
-  });
-
-  it('should create styles for every permutation if main prop has more breakpoints', () => {
-    const result = responsiveProp<string, string>(
-      [
-        { xs: 'medium', l: 'large', xl: 'small' },
-        { xs: 'column', xl: 'row' },
-      ],
-      ['default', 'default'],
-      (prop, direction) => `${direction}: ${prop};`
-    );
-
-    expect(result).toEqual(
-      'column: medium; @media (min-width: 1024px) { column: large; } @media (min-width: 1280px) { row: small; }'
-    );
-  });
-
-  it('should create styles for every permutation if dependency prop has more breakpoints', () => {
-    const result = responsiveProp<string, string>(
-      [{ l: 'medium' }, { xs: 'column', xl: 'row' }],
-      ['small', 'default'],
-      (prop, direction) => `${direction}: ${prop};`
-    );
-
-    expect(result).toEqual(
-      'column: small; @media (min-width: 1024px) { column: medium; } @media (min-width: 1280px) { row: medium; }'
-    );
-  });
-
-  it('should provide multiple dependencies to callback', () => {
-    const result = responsiveProp<string, string, boolean, string>(
-      [
-        { l: 'medium' },
-        { xs: 'column', xl: 'row' },
+      expect(callback).toHaveBeenCalledTimes(4);
+      expect(callback).toHaveBeenCalledWith(
+        'first_default',
+        'second_default',
         true,
-        { s: 'px', xl: 'em' },
-      ],
-      ['small', 'default', false, 'rem'],
-      (prop, direction, other, unit) =>
-        `${direction}${other ? '' : '-reverse'}: ${prop} ${unit};`
-    );
+        'fourth_default'
+      );
+      expect(callback).toHaveBeenCalledWith(
+        'first_small',
+        'second_small',
+        true,
+        'fourth_small'
+      );
+      expect(callback).toHaveBeenCalledWith(
+        'first_small',
+        'second_small',
+        true,
+        'fourth_medium'
+      );
+      expect(callback).toHaveBeenCalledWith(
+        'first_small',
+        'second_large',
+        true,
+        'fourth_medium'
+      );
+    });
 
-    expect(result).toEqual(
-      'column: small rem; @media (min-width: 321px) { column: small px; } @media (min-width: 1024px) { column: medium px; } @media (min-width: 1280px) { row: medium em; }'
-    );
+    it('should call callback with all value permutations if first prop has more breakpoints', () => {
+      const callback = jest.fn();
+
+      responsiveProp<string, string>(
+        [
+          {
+            small: 'first_small',
+            medium: 'first_medium',
+            large: 'first_large',
+          },
+          { small: 'second_small', large: 'second_large' },
+        ],
+        ['first_default', 'second_default'],
+        callback
+      );
+
+      expect(callback).toHaveBeenCalledTimes(4);
+      expect(callback).toHaveBeenCalledWith('first_default', 'second_default');
+      expect(callback).toHaveBeenCalledWith('first_small', 'second_small');
+      expect(callback).toHaveBeenCalledWith('first_medium', 'second_small');
+      expect(callback).toHaveBeenCalledWith('first_large', 'second_large');
+    });
+
+    it('should call callback with all value permutations if subsequent props have more breakpoints', () => {
+      const callback = jest.fn();
+
+      responsiveProp<string, string>(
+        [
+          { medium: 'first_medium' },
+          { small: 'second_small', large: 'second_large' },
+        ],
+        ['first_default', 'second_default'],
+        callback
+      );
+
+      expect(callback).toHaveBeenCalledTimes(4);
+      expect(callback).toHaveBeenCalledWith('first_default', 'second_default');
+      expect(callback).toHaveBeenCalledWith('first_default', 'second_small');
+      expect(callback).toHaveBeenCalledWith('first_medium', 'second_small');
+      expect(callback).toHaveBeenCalledWith('first_medium', 'second_large');
+    });
+
+    it('should allow subsequent props to be undefined', () => {
+      const callback = jest.fn();
+
+      responsiveProp<string, string | undefined>(
+        [{ large: 'first_large' }, undefined],
+        ['first_default', undefined],
+        callback
+      );
+
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveBeenCalledWith('first_default', undefined);
+      expect(callback).toHaveBeenCalledWith('first_large', undefined);
+    });
+
+    it('should allow first prop using default and subsequent props to be undefined', () => {
+      const callback = jest.fn();
+
+      responsiveProp<string | undefined, string | undefined>(
+        [undefined, undefined],
+        ['first_default', undefined],
+        callback
+      );
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledWith('first_default', undefined);
+    });
   });
 
-  it('should allow dependencies to be undefined', () => {
-    const result = responsiveProp<string, string | undefined>(
-      [{ l: 'bar' }, undefined],
-      ['default', undefined],
-      (prop, direction) => `foo${direction ? '-direction' : ''}: ${prop};`
-    );
+  describe('object as props', () => {
+    it('should allow objects as prop if they do not use breakpoints as keys', () => {
+      const callback = jest.fn();
 
-    expect(result).toEqual(
-      'foo: default; @media (min-width: 1024px) { foo: bar; }'
-    );
-  });
+      responsiveProp<{ width: number; height: number } | undefined>(
+        { width: 1, height: 2 },
+        undefined,
+        callback
+      );
 
-  it('should allow main prop using a fallback and dependencies be undefined', () => {
-    const result = responsiveProp<string | undefined, string | undefined>(
-      [undefined, undefined],
-      ['default', undefined],
-      (prop, direction) => `foo${direction ? '-direction' : ''}: ${prop};`
-    );
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledWith({ width: 1, height: 2 });
+    });
 
-    expect(result).toEqual('foo: default;');
-  });
+    it('should allow objects as responsive props if they do not use breakpoints as keys', () => {
+      const callback = jest.fn();
 
-  it('should allow main prop and dependencies be optional', () => {
-    const result = responsiveProp<string | undefined, string | undefined>(
-      [undefined, undefined],
-      [undefined, undefined],
-      (prop, direction) => (prop || direction ? 'yeah' : 'ney')
-    );
+      responsiveProp<{ width: number; height: number } | undefined>(
+        { medium: { width: 3, height: 4 } },
+        { width: 1, height: 2 },
+        callback
+      );
 
-    expect(result).toEqual('ney');
-  });
-
-  it('should allow objects as prop if they do not use breakpoints as keys', () => {
-    const result = responsiveProp<
-      { width: number; height: number } | undefined
-    >(
-      { width: 1, height: 2 },
-      undefined,
-      prop => prop && `width: ${prop.width}; height: ${prop.height};`
-    );
-
-    expect(result).toEqual('width: 1; height: 2;');
-  });
-
-  it('should allow objects as responsive prop', () => {
-    const result = responsiveProp<
-      { width: number; height: number } | undefined
-    >(
-      { m: { width: 4, height: 5 } },
-      { width: 1, height: 2 },
-      prop => prop && `width: ${prop.width}; height: ${prop.height};`
-    );
-
-    expect(result).toEqual(
-      'width: 1; height: 2; @media (min-width: 768px) { width: 4; height: 5; }'
-    );
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveBeenCalledWith({ width: 1, height: 2 });
+      expect(callback).toHaveBeenCalledWith({ width: 3, height: 4 });
+    });
   });
 });

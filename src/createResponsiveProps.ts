@@ -1,6 +1,7 @@
 import { BreakpointMap } from './types';
 import { getKeys } from './getKeys';
 import { mq } from './mediaQuery';
+import { responsiveProp } from './responsiveProp';
 
 type WithDefault<T> = T & { default: 0 };
 
@@ -18,5 +19,6 @@ export function createResponsiveProps<Breakpoints extends BreakpointMap>(
 
   return {
     mq: mq(sortedBreakpoints),
+    responsiveProps: responsiveProp(sortedBreakpoints),
   };
 }
