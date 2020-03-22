@@ -1,27 +1,51 @@
-# TSDX Bootstrap
+# responsiveProps
+
+Support responsive props with ease.
+
+responsiveProps allows you to support objects defining values for multiple breakpoints for any prop in a `React` application using a CSS-in-JS solution.
+
+# Installation
+
+```bash
+yarn add @exqir/responsive-props
+# or
+npm install @exqir/responsive-props
+```
+
+# Usage
+
+Define the supported breakpoints by providing an object with the names as key and the affiliated `min-width` as value to the `createResponsiveProps` function.
+
+A breakpoint with the name `default` with the value `0` will be added automatically.
+
+```js
+import { createResponsiveProps } from '@exqir/responsive-props';
+
+const { responsiveProp } = createResponsiveProps({
+  small: 320,
+  medium: 760,
+  large: 1024,
+});
+```
+
+The returned `responsiveProp` function can be used inside a CSS-in-JS solution to generate min-width based media queries.
+
+```js
+const cssWithMq = responsiveProp(
+  {
+    small: 'red',
+    medium: 'blue',
+    large: 'green',
+  },
+  'black',
+  color => `color: ${color};`
+);
+
+console.log(cssWithMq);
+// Output:
+// color: black, @media (min-width: 320px) { color: red; } @media (min-width: 760px) { color: blue; } @media (min-width: 1024px) { color: green; }
+```
+
+#
 
 This project was bootstrapped with [TSDX](https://github.com/jaredpalmer/tsdx).
-
-## Local Development
-
-Below is a list of commands you will probably find useful.
-
-### `npm start` or `yarn start`
-
-Runs the project in development/watch mode. Your project will be rebuilt upon changes. TSDX has a special logger for you convenience. Error messages are pretty printed and formatted for compatibility VS Code's Problems tab.
-
-<img src="https://user-images.githubusercontent.com/4060187/52168303-574d3a00-26f6-11e9-9f3b-71dbec9ebfcb.gif" width="600" />
-
-Your library will be rebuilt if you make edits.
-
-### `npm run build` or `yarn build`
-
-Bundles the package to the `dist` folder.
-The package is optimized and bundled with Rollup into multiple formats (CommonJS, UMD, and ES Module).
-
-<img src="https://user-images.githubusercontent.com/4060187/52168322-a98e5b00-26f6-11e9-8cf6-222d716b75ef.gif" width="600" />
-
-### `npm test` or `yarn test`
-
-Runs the test watcher (Jest) in an interactive mode.
-By default, runs tests related to files changed since the last commit.
