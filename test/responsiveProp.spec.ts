@@ -236,6 +236,25 @@ describe('responsiveProp', () => {
       expect(callback).toHaveBeenCalledTimes(1);
       expect(callback).toHaveBeenCalledWith('first_default', undefined);
     });
+
+    it('should allow breakpoints in responsive props to be provided in any order', () => {
+      const callback = jest.fn();
+
+      responsiveProp<string, string>(
+        [
+          { medium: 'first_medium' },
+          { large: 'second_large', small: 'second_small' },
+        ],
+        ['first_default', 'second_default'],
+        callback
+      );
+
+      expect(callback).toHaveBeenCalledTimes(4);
+      expect(callback).toHaveBeenCalledWith('first_default', 'second_default');
+      expect(callback).toHaveBeenCalledWith('first_default', 'second_small');
+      expect(callback).toHaveBeenCalledWith('first_medium', 'second_small');
+      expect(callback).toHaveBeenCalledWith('first_medium', 'second_large');
+    });
   });
 
   describe('object as props', () => {
