@@ -1,4 +1,4 @@
-import { BreakpointMap } from './types';
+import { BreakpointMap } from '../types/types';
 
 /**
  * Creates a function to get min-width based media queries for the provided breakpoint.

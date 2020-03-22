@@ -1,4 +1,4 @@
-import { BreakpointMap } from './types';
+import { BreakpointMap } from '../types/types';
 import { mq } from './mediaQuery';
 import { getKeys } from './getKeys';
 
@@ -18,6 +18,8 @@ export type ResponsiveProp<T, Breakpoints extends BreakpointMap> =
 export function responsiveProp<Breakpoints extends BreakpointMap>(
   breakpoints: Breakpoints
 ) {
+  const breakpointsWithDefault = { default: 0, ...breakpoints };
+
   function isReponsiveObject<T>(prop: ResponsiveObject<T, Breakpoints>) {
     if (Object.prototype.hasOwnProperty.call(prop, 'default')) return true;
     for (const key of getKeys(breakpoints)) {
@@ -44,19 +46,21 @@ export function responsiveProp<Breakpoints extends BreakpointMap>(
   }
 
   function sortBreakpoints<T>(obj: ResponsiveObject<T, Breakpoints>) {
-    return getKeys(obj).sort((a, b) => breakpoints[a] - breakpoints[b]);
+    return getKeys(obj).sort(
+      (a, b) => breakpointsWithDefault[a] - breakpointsWithDefault[b]
+    );
   }
 
   function wrapInMq(breakpoint: keyof Breakpoints, style?: string) {
     if (!style) return undefined;
     if (breakpoint === 'default') return style;
-    return `${mq(breakpoints)(breakpoint)} { ${style} }`;
+    return `${mq(breakpointsWithDefault)(breakpoint)} { ${style} }`;
   }
 
   function getNextSmallerBreakpoint<T>(
     bp: keyof Breakpoints,
     prop: ResponsiveObjectDefault<T, Breakpoints>,
-    bpList = getKeys(breakpoints),
+    bpList = getKeys(breakpointsWithDefault),
     index = bpList.findIndex(b => b === bp)
   ): T {
     return Object.prototype.hasOwnProperty.call(prop, bp)

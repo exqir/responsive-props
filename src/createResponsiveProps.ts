@@ -1,4 +1,4 @@
-import { BreakpointMap } from './types';
+import { BreakpointMap } from '../types/types';
 import { getKeys } from './getKeys';
 import { mq } from './mediaQuery';
 import { responsiveProp } from './responsiveProp';

@@ -4,7 +4,6 @@ type Value = 'value' | 'default';
 type Option = 'some' | 'none';
 
 const breakpoints = {
-  default: 0,
   small: 100,
   medium: 500,
   large: 600,
