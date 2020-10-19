@@ -1,49 +1,16 @@
-import { BreakpointMap } from '../types/types';
+import {
+  BreakpointMap,
+  ResponsiveObject,
+  ResponsiveObjectDefault,
+  ResponsiveProp,
+} from '../types/types';
 import { mq } from './mediaQuery';
 import { getKeys } from './getKeys';
-
-type ResponsiveObject<T, Breakpoints extends BreakpointMap> = {
-  [BP in keyof Breakpoints]?: T;
-} & { default?: T };
-
-type ResponsiveObjectDefault<
-  T,
-  Breakpoints extends BreakpointMap
-> = ResponsiveObject<T, Breakpoints> & { default: T };
-
-export type ResponsiveProp<T, Breakpoints extends BreakpointMap> =
-  | T
-  | ResponsiveObject<T, Breakpoints>;
 
 export function responsiveProp<Breakpoints extends BreakpointMap>(
   breakpoints: Breakpoints
 ) {
   const breakpointsWithDefault = { default: 0, ...breakpoints };
-
-  function isReponsiveObject<T>(prop: ResponsiveObject<T, Breakpoints>) {
-    if (Object.prototype.hasOwnProperty.call(prop, 'default')) return true;
-    for (const key of getKeys(breakpoints)) {
-      if (Object.prototype.hasOwnProperty.call(prop, key)) return true;
-    }
-    return false;
-  }
-
-  function normalizeReponsiveProp<T>(
-    prop: ResponsiveProp<T, Breakpoints> | undefined,
-    defaultValue: T
-  ) {
-    if (typeof prop === 'object' && isReponsiveObject(prop)) {
-      const propWithDefault: ResponsiveObjectDefault<T, Breakpoints> = {
-        default: defaultValue,
-        ...prop,
-      };
-      return propWithDefault;
-    }
-    const normalized: ResponsiveObjectDefault<T, Breakpoints> = {
-      default: prop !== undefined ? (prop as T) : defaultValue,
-    };
-    return normalized;
-  }
 
   function sortBreakpoints<T>(obj: ResponsiveObject<T, Breakpoints>) {
     return getKeys(obj).sort(
@@ -53,7 +20,7 @@ export function responsiveProp<Breakpoints extends BreakpointMap>(
 
   function wrapInMq(breakpoint: keyof Breakpoints, style?: string) {
     if (!style) return undefined;
-    if (breakpoint === 'default') return style;
+    if (breakpointsWithDefault[breakpoint] === 0) return style;
     return `${mq(breakpointsWithDefault)(breakpoint)} { ${style} }`;
   }
 
@@ -66,16 +33,6 @@ export function responsiveProp<Breakpoints extends BreakpointMap>(
     return Object.prototype.hasOwnProperty.call(prop, bp)
       ? prop[bp]! // eslint-disable-line @typescript-eslint/no-non-null-assertion
       : getNextSmallerBreakpoint(bpList[index - 1], prop, bpList, index - 1);
-  }
-
-  function normalize<T>(prop: T | any[], defaultValue: T | any[]) {
-    const propArray = Array.isArray(prop) ? prop : [prop];
-    const defaultArray = Array.isArray(defaultValue)
-      ? defaultValue
-      : [defaultValue];
-    return propArray.map((property, index) =>
-      normalizeReponsiveProp(property, defaultArray[index])
-    );
   }
 
   /**
@@ -135,17 +92,21 @@ export function responsiveProp<Breakpoints extends BreakpointMap>(
     defaultValue: T | any[],
     callback: (...prop: any[]) => string | undefined
   ) {
-    const normalized = normalize(prop, defaultValue);
-    const allBreakpoints = normalized.reduce(
+    const normalizedProps = normalizeProps(
+      prop,
+      defaultValue,
+      breakpointsWithDefault
+    );
+    const combinedBreakpoints = normalizedProps.reduce(
       (acc, dep) => ({ ...acc, ...dep }),
       {}
     );
 
-    return sortBreakpoints(allBreakpoints)
+    return sortBreakpoints(combinedBreakpoints)
       .map(bp =>
         wrapInMq(
           bp,
-          callback(...normalized.map(p => getNextSmallerBreakpoint(bp, p)))
+          callback(...normalizedProps.map(p => getNextSmallerBreakpoint(bp, p)))
         )
       )
       .filter(Boolean)
@@ -153,4 +114,88 @@ export function responsiveProp<Breakpoints extends BreakpointMap>(
   }
 
   return responsiveProp;
+}
+
+function normalizeProps<P0, Breakpoints extends BreakpointMap>(
+  prop: P0,
+  defaultValue: P0,
+  props: Breakpoints
+): [ResponsiveObjectDefault<P0, Breakpoints>];
+function normalizeProps<P0, P1, Breakpoints extends BreakpointMap>(
+  prop: [P0, P1],
+  defaultValue: [P0, P1],
+  props: Breakpoints
+): [
+  ResponsiveObjectDefault<P0, Breakpoints>,
+  ResponsiveObjectDefault<P1, Breakpoints>
+];
+function normalizeProps<P0, P1, P2, Breakpoints extends BreakpointMap>(
+  prop: [P0, P1, P2],
+  defaultValue: [P0, P1, P2],
+  props: Breakpoints
+): [
+  ResponsiveObjectDefault<P0, Breakpoints>,
+  ResponsiveObjectDefault<P1, Breakpoints>,
+  ResponsiveObjectDefault<P2, Breakpoints>
+];
+function normalizeProps<P0, P1, P2, P3, Breakpoints extends BreakpointMap>(
+  prop: [P0, P1, P2, P3],
+  defaultValue: [P0, P1, P2, P3],
+  props: Breakpoints
+): [
+  ResponsiveObjectDefault<P0, Breakpoints>,
+  ResponsiveObjectDefault<P1, Breakpoints>,
+  ResponsiveObjectDefault<P2, Breakpoints>,
+  ResponsiveObjectDefault<P3, Breakpoints>
+];
+function normalizeProps<P0, P1, P2, P3, P4, Breakpoints extends BreakpointMap>(
+  prop: [P0, P1, P2, P3, P4],
+  defaultValue: [P0, P1, P2, P3, P4],
+  props: Breakpoints
+): [
+  ResponsiveObjectDefault<P0, Breakpoints>,
+  ResponsiveObjectDefault<P1, Breakpoints>,
+  ResponsiveObjectDefault<P2, Breakpoints>,
+  ResponsiveObjectDefault<P3, Breakpoints>,
+  ResponsiveObjectDefault<P4, Breakpoints>
+];
+function normalizeProps<T, Breakpoints extends BreakpointMap>(
+  prop: T | any[],
+  defaultValue: T | any[],
+  props: Breakpoints
+) {
+  const propArray = Array.isArray(prop) ? prop : [prop];
+  const defaultArray = Array.isArray(defaultValue)
+    ? defaultValue
+    : [defaultValue];
+  return propArray.map((property, index) =>
+    normalizeReponsiveProp(property, defaultArray[index], props)
+  );
+}
+
+function normalizeReponsiveProp<T, Breakpoints extends BreakpointMap>(
+  prop: ResponsiveProp<T, Breakpoints> | undefined,
+  defaultValue: T,
+  props: Breakpoints
+): ResponsiveObjectDefault<T, Breakpoints> {
+  if (typeof prop === 'object' && isReponsiveObject(prop, props)) {
+    return {
+      default: defaultValue,
+      ...prop,
+    };
+  }
+  return {
+    default: prop !== undefined ? prop : defaultValue,
+  };
+}
+
+function isReponsiveObject<T, Breakpoints extends BreakpointMap>(
+  prop: ResponsiveObject<T, Breakpoints>,
+  breakpoints: Breakpoints
+): prop is ResponsiveObject<T, Breakpoints> {
+  if (Object.prototype.hasOwnProperty.call(prop, 'default')) return true;
+  for (const key of getKeys(breakpoints)) {
+    if (Object.prototype.hasOwnProperty.call(prop, key)) return true;
+  }
+  return false;
 }
